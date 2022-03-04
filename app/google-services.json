@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "863925880159",
+    "project_id": "kotlin-school-assignment",
+    "storage_bucket": "kotlin-school-assignment.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:863925880159:android:8e3c2ec1d1d3f260e722ea",
+        "android_client_info": {
+          "package_name": "com.example.schoolassignment"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "863925880159-u4nqmnetfaila0ekrkl881dca2g75l82.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAYAKV1Ai3TNvkBb5yM298WhNWKthymswA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "863925880159-u4nqmnetfaila0ekrkl881dca2g75l82.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
