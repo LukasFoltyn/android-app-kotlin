@@ -8,7 +8,7 @@ import com.google.firebase.ktx.Firebase
 
 class LoginViewModel : ViewModel() {
 
-    val firebaseAuth = Firebase.auth
+    private val firebaseAuth = Firebase.auth
 
     val loginPageState = mutableStateOf(LoginState.EMAIL_OBTAINING)
     val email = mutableStateOf("")
@@ -68,7 +68,7 @@ class LoginViewModel : ViewModel() {
                 .addOnSuccessListener {
                     loginPageState.value = LoginState.EMAIL_OBTAINING
                     resetPasswords()
-                    navController.navigate(APP_PAGE_ROUTE)
+                    navController.navigate(SCAFFOLD_GAME_PAGE_ROUTE)
                 }
                 .addOnFailureListener {
                     errorMsg.value = "Incorrect password!"
@@ -90,7 +90,7 @@ class LoginViewModel : ViewModel() {
                 .addOnSuccessListener {
                     loginPageState.value = LoginState.EMAIL_OBTAINING
                     resetPasswords()
-                    navController.navigate(APP_PAGE_ROUTE)
+                    navController.navigate(SCAFFOLD_GAME_PAGE_ROUTE)
                 }
                 .addOnFailureListener {
                     errorMsg.value = it.message.toString()
@@ -100,6 +100,14 @@ class LoginViewModel : ViewModel() {
             errorMsg.value = "Passwords are not matching!"
             passwordsAreMatching.value = false
         }
+    }
+
+    fun signOut(){
+        firebaseAuth.signOut()
+    }
+
+    fun getUserEmail(): String? {
+        return firebaseAuth.currentUser?.email
     }
 
 }
