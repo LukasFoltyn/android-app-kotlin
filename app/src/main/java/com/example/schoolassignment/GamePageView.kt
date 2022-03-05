@@ -1,16 +1,14 @@
 package com.example.schoolassignment
 
-import android.util.Log
 import androidx.activity.ComponentActivity
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,12 +20,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
-import java.time.format.TextStyle
+import com.example.schoolassignment.game.GameAllDTO
+
 
 const val GAME_OVERVIEW_ROUTE = "gameOverviewView"
 const val GAME_FAVOURITES_ROUTE = "gameFavouritesView"
@@ -39,13 +40,13 @@ fun GamePageView(mainNavController: NavHostController) {
 
     Scaffold(
         topBar = { TopAppBar(mainNavController) },
-        bottomBar = { BottomAppBar() },
+        bottomBar = { BottomAppBar(gameNavController) },
 
         ) {
         NavHost(navController = gameNavController, startDestination = GAME_OVERVIEW_ROUTE)
         {
             composable(route = GAME_OVERVIEW_ROUTE) {
-                GameOverview()
+                GameOverview(mainNavController)
             }
             composable(route = GAME_FAVOURITES_ROUTE) {
                 GameFavourites()
@@ -56,12 +57,17 @@ fun GamePageView(mainNavController: NavHostController) {
 }
 
 @Composable
-fun GameOverview() {
+fun GameOverview(mainNavController: NavHostController) {
 
+    val userId =
+        "EGL3WIE65YZfun6nfoCXpPlQBfD3"
+    //Firebase.auth.currentUser!!.uid
     val gameVM = viewModel<GameViewModel>(LocalContext.current as ComponentActivity)
     gameVM.getAllGames()
+    gameVM.getUsersFavouriteGames(userId)
 
-    if (gameVM.games.value.isEmpty()) {
+
+    if (gameVM.isLoadingGames.value || gameVM.isLoadingGameIds.value) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
@@ -71,49 +77,12 @@ fun GameOverview() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(count = gameVM.games.value.size, itemContent = { index: Int ->
-                Card(
-                    modifier = Modifier
-                        .height(125.dp)
-                        .padding(horizontal = 15.dp, vertical = 10.dp)
-                        .clickable { Log.d("********", gameVM.games.value[index].id.toString()) },
-                    shape = RoundedCornerShape(10.dp),
-                    elevation = 8.dp,
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        AsyncImage(
-                            model = gameVM.games.value[index].thumbnail,
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .clip(RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp)),
-                            contentDescription = null
-                        )
-                        Column(modifier = Modifier.padding(10.dp)) {
-                            Row {
-                                Text(
-                                    modifier = Modifier.weight(6f),
-                                    text = gameVM.games.value[index].title,
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Icon(
-                                    modifier = Modifier.weight(1f),
-                                    painter = painterResource(id = R.drawable.ic_baseline_favorite_24),
-                                    contentDescription = "Add to favourites",
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(3.dp))
-                            Text(
-                                text = gameVM.games.value[index].short_description,
-                                overflow = TextOverflow.Ellipsis,
-                                maxLines = 3
-                            )
-                        }
-
-                    }
-                }
+                GameCard(
+                    game = gameVM.games.value[index],
+                    gameVM = gameVM,
+                    isFavourite = gameVM.favouriteGameIds.value.any { it == gameVM.games.value[index].id },
+                    mainNavController = mainNavController
+                )
             })
         }
     }
@@ -132,41 +101,131 @@ fun TopAppBar(mainNavController: NavHostController) {
     val loginVM = viewModel<LoginViewModel>(LocalContext.current as ComponentActivity)
     val userEmail = loginVM.getUserEmail()
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.Yellow)
-            .padding(15.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    )
-    {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_baseline_visibility_24),
-            contentDescription = "Filter drawer"
+
+    TopAppBar(backgroundColor = Color(0xFF363333)) {
+
+    }
+
+//        Text(text = userEmail)
+//        TextButton(onClick = {
+//            loginVM.signOut()
+//            mainNavController.navigate(LOGIN_PAGE_ROUTE)
+//        }) {
+//            Text(text = "SIGN OUT")
+//        }
+}
+
+@Composable
+fun BottomAppBar(gameNavController: NavHostController) {
+
+    val navBackStackEntry by gameNavController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
+
+    BottomNavigation(
+        backgroundColor = Color(0xFF363333),
+    ) {
+        BottomNavigationItem(
+            icon = {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_baseline_videogame_asset_24),
+                    contentDescription = "Game Overview"
+                )
+            },
+            label = { Text(text = "Games") },
+            selectedContentColor = Color(0xFFCCC4C4),
+            unselectedContentColor = Color(0xFF817C7C),
+            selected = currentDestination?.hierarchy?.any { it.route == GAME_OVERVIEW_ROUTE } == true,
+            onClick = { gameNavController.navigate(GAME_OVERVIEW_ROUTE)},
         )
-        if (userEmail != null) {
-            Text(text = userEmail)
-        }
-        TextButton(onClick = {
-            loginVM.signOut()
-            mainNavController.navigate(LOGIN_PAGE_ROUTE)
-        }) {
-            Text(text = "SIGN OUT")
+
+        BottomNavigationItem(
+            icon = {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_baseline_star_24),
+                    contentDescription = "Favourite games"
+                )
+            },
+            label = { Text(text = "Favourites") },
+            selectedContentColor = Color(0xFFCCC4C4),
+            unselectedContentColor = Color(0xFF817C7C),
+            selected = currentDestination?.hierarchy?.any { it.route == GAME_FAVOURITES_ROUTE } == true,
+            onClick = { gameNavController.navigate(GAME_FAVOURITES_ROUTE) },
+        )
+    }
+}
+
+@Composable
+fun GameCard(
+    game: GameAllDTO,
+    gameVM: GameViewModel,
+    isFavourite: Boolean,
+    mainNavController: NavHostController
+) {
+    Card(
+        modifier = Modifier
+            .height(125.dp)
+            .padding(horizontal = 15.dp, vertical = 10.dp)
+            .clickable {
+                mainNavController.navigate("$SCAFFOLD_GAME_DETAIL_ROUTE/${game.id}")
+            },
+        shape = RoundedCornerShape(10.dp),
+        elevation = 8.dp,
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AsyncImage(
+                model = game.thumbnail,
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp)),
+                contentDescription = null
+            )
+            Column(modifier = Modifier.padding(10.dp)) {
+                Row {
+
+                    var isFavouriteChecked by remember { mutableStateOf(isFavourite) }
+                    val iconTint by animateColorAsState(
+                        if (isFavouriteChecked) Color(0xFFEC407A) else Color(0xFFB0BEC5)
+                    )
+
+                    Text(
+                        modifier = Modifier.weight(6f),
+                        text = game.title,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Icon(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable {
+                                isFavouriteChecked = !isFavouriteChecked
+                                if (isFavouriteChecked) {
+                                    gameVM.addFavouriteGame(game.id)
+                                } else {
+                                    gameVM.removeFavouriteGame(game.id)
+                                }
+                            },
+                        painter = painterResource(id = R.drawable.ic_baseline_favorite_24),
+                        contentDescription = "Add to favourites",
+                        tint = iconTint
+                    )
+                }
+                Spacer(modifier = Modifier.height(3.dp))
+                Text(
+                    text = game.short_description,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 3
+                )
+            }
+
         }
     }
 }
 
 @Composable
-fun BottomAppBar() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.Yellow)
-            .padding(15.dp)
-    ) {
-        IconButton(onClick = { /*TODO*/ }) {
+fun GameDetailView(mainNavController: NavHostController, gameId: String) {
+    Text(text = gameId)
 
-        }
-    }
+
 }

@@ -106,8 +106,8 @@ class LoginViewModel : ViewModel() {
         firebaseAuth.signOut()
     }
 
-    fun getUserEmail(): String? {
-        return firebaseAuth.currentUser?.email
+    fun getUserEmail(): String {
+        return firebaseAuth.currentUser!!.email!!
     }
 
 }
