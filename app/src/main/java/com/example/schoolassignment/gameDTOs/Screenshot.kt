@@ -1,4 +1,4 @@
-package com.example.schoolassignment.game
+package com.example.schoolassignment.gameDTOs
 
 data class Screenshot(
     val id: Int,

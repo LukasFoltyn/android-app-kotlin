@@ -1,11 +1,11 @@
-package com.example.schoolassignment
+package com.example.schoolassignment.viewModels
 
-import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.schoolassignment.game.*
+import com.example.schoolassignment.GameAPI
+import com.example.schoolassignment.gameDTOs.*
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -17,11 +17,15 @@ import retrofit2.create
 
 class GameViewModel : ViewModel() {
 
-    val games: MutableState<List<GameAllDTO>> = mutableStateOf(listOf())
-    val favouriteGameIds: MutableState<MutableList<Int>> = mutableStateOf(mutableListOf())
+    var games: List<GameAllDTO> = listOf()
+    var favouriteGameIds: MutableList<Int> = mutableListOf()
+    lateinit var specificGame: GameDetailDTO
+
+    var showFavouritesPage: Boolean = false
+
     val isLoadingGameIds = mutableStateOf(true)
     val isLoadingGames = mutableStateOf(true)
-    val specificGame: MutableState<GameDetailDTO?> = mutableStateOf(null)
+    val isLoadingSpecificGame = mutableStateOf(true)
 
     private val gameAPI: GameAPI by lazy {
         Retrofit
@@ -37,7 +41,7 @@ class GameViewModel : ViewModel() {
         viewModelScope.launch {
             val result = gameAPI.getAllGames().awaitResponse()
             if (result.isSuccessful) {
-                games.value = result.body()!!
+                games = result.body()!!
             } else {
                 //Error
             }
@@ -54,7 +58,7 @@ class GameViewModel : ViewModel() {
             .get()
             .addOnSuccessListener {
                 if (it.data != null) {
-                    favouriteGameIds.value = it.get("gameIds") as MutableList<Int>
+                    favouriteGameIds = it.get("gameIds") as MutableList<Int>
                 }
                 isLoadingGameIds.value = false
             }
@@ -64,20 +68,27 @@ class GameViewModel : ViewModel() {
         viewModelScope.launch {
             val result = gameAPI.getSpecificGame(id).awaitResponse()
             if (result.isSuccessful) {
-                specificGame.value = result.body()
+                specificGame = result.body()!!
             } else {
                 //Error
             }
+            isLoadingSpecificGame.value = false
         }
     }
 
     fun addFavouriteGame(gameId: Int) {
-        favouriteGameIds.value.add(gameId)
+        favouriteGameIds.add(gameId)
         updateFavouriteGames()
     }
 
     fun removeFavouriteGame(gameId: Int) {
-        favouriteGameIds.value.remove(gameId)
+        var removeIdx = 0;
+        favouriteGameIds.forEachIndexed { index, id ->
+            if(id == gameId){
+                removeIdx = index
+            }
+        }
+        favouriteGameIds.removeAt(removeIdx)
         updateFavouriteGames()
     }
 
@@ -85,7 +96,7 @@ class GameViewModel : ViewModel() {
         Firebase.firestore
             .collection("favouriteGames")
             .document(Firebase.auth.currentUser!!.uid)
-            .set(hashMapOf("gameIds" to favouriteGameIds.value))
+            .set(hashMapOf("gameIds" to favouriteGameIds))
     }
 
 }

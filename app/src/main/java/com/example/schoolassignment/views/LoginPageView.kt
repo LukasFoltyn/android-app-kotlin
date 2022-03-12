@@ -1,6 +1,5 @@
-package com.example.schoolassignment
+package com.example.schoolassignment.views
 
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -16,6 +15,8 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.example.schoolassignment.R
+import com.example.schoolassignment.viewModels.LoginViewModel
 
 enum class LoginState { EMAIL_OBTAINING, REGISTERING, SIGNING_IN }
 

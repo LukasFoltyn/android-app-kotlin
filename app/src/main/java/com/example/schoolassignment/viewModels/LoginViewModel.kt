@@ -1,8 +1,10 @@
-package com.example.schoolassignment
+package com.example.schoolassignment.viewModels
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavHostController
+import com.example.schoolassignment.views.LoginState
+import com.example.schoolassignment.SCAFFOLD_GAME_PAGE_ROUTE
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 
@@ -106,8 +108,8 @@ class LoginViewModel : ViewModel() {
         firebaseAuth.signOut()
     }
 
-    fun getUserEmail(): String {
-        return firebaseAuth.currentUser!!.email!!
+    fun getUserEmail(): String? {
+        return firebaseAuth.currentUser?.email
     }
 
 }
