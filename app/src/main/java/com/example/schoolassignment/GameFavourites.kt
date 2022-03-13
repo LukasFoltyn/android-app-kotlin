@@ -1,17 +1,13 @@
 package com.example.schoolassignment
 
 import androidx.activity.ComponentActivity
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -19,14 +15,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.example.schoolassignment.viewModels.GameViewModel
+import com.example.schoolassignment.viewModels.GameOverviewViewModel
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 
 @Composable
 fun GameFavourites(mainNavController: NavHostController) {
-    val userId =
-        "EGL3WIE65YZfun6nfoCXpPlQBfD3"
-    //Firebase.auth.currentUser!!.uid
-    val gameVM = viewModel<GameViewModel>(LocalContext.current as ComponentActivity)
+    val gameVM = viewModel<GameOverviewViewModel>(LocalContext.current as ComponentActivity)
     gameVM.showFavouritesPage = true;
 
 

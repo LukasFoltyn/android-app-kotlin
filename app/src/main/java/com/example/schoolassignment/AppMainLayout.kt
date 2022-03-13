@@ -1,5 +1,6 @@
 package com.example.schoolassignment
 
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavType
@@ -20,12 +21,13 @@ const val SCAFFOLD_GAME_PAGE_ROUTE = "scaffoldPageView"
 const val SCAFFOLD_GAME_DETAIL_ROUTE = "scaffoldGameDetailView"
 
 
+@ExperimentalMaterialApi
 @Composable
 fun AppMainLayout() {
 
     val mainNavController = rememberNavController()
 
-    NavHost(navController = mainNavController, startDestination = SCAFFOLD_GAME_PAGE_ROUTE) {
+    NavHost(navController = mainNavController, startDestination = LOGIN_PAGE_ROUTE) {
         composable(route = LOGIN_PAGE_ROUTE) {
             LoginPageView(mainNavController)
         }

@@ -22,17 +22,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.schoolassignment.gameDTOs.GameAllDTO
-import com.example.schoolassignment.viewModels.GameViewModel
-import com.example.schoolassignment.views.BottomNavItem
+import com.example.schoolassignment.viewModels.GameOverviewViewModel
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 
 
 @Composable
 fun GameOverview(mainNavController: NavHostController) {
 
-    val userId =
-        "EGL3WIE65YZfun6nfoCXpPlQBfD3"
-    //Firebase.auth.currentUser!!.uid
-    val gameVM = viewModel<GameViewModel>(LocalContext.current as ComponentActivity)
+    val userId = Firebase.auth.currentUser!!.uid
+    val gameVM = viewModel<GameOverviewViewModel>(LocalContext.current as ComponentActivity)
     gameVM.showFavouritesPage = false
     gameVM.getAllGames()
     gameVM.getUsersFavouriteGames(userId)
@@ -62,7 +61,7 @@ fun GameOverview(mainNavController: NavHostController) {
 @Composable
 fun GameOverviewCard(
     game: GameAllDTO,
-    gameVM: GameViewModel,
+    gameVM: GameOverviewViewModel,
     isFavourite: Boolean,
     mainNavController: NavHostController
 ) {

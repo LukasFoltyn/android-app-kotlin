@@ -5,7 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.schoolassignment.GameAPI
-import com.example.schoolassignment.gameDTOs.*
+import com.example.schoolassignment.gameDTOs.GameAllDTO
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -15,17 +15,17 @@ import retrofit2.awaitResponse
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.create
 
-class GameViewModel : ViewModel() {
+
+
+class GameOverviewViewModel : ViewModel() {
 
     var games: List<GameAllDTO> = listOf()
     var favouriteGameIds: MutableList<Int> = mutableListOf()
-    lateinit var specificGame: GameDetailDTO
-
     var showFavouritesPage: Boolean = false
+
 
     val isLoadingGameIds = mutableStateOf(true)
     val isLoadingGames = mutableStateOf(true)
-    val isLoadingSpecificGame = mutableStateOf(true)
 
     private val gameAPI: GameAPI by lazy {
         Retrofit
@@ -64,18 +64,6 @@ class GameViewModel : ViewModel() {
             }
     }
 
-    fun getSpecificGame(id: Int) {
-        viewModelScope.launch {
-            val result = gameAPI.getSpecificGame(id).awaitResponse()
-            if (result.isSuccessful) {
-                specificGame = result.body()!!
-            } else {
-                //Error
-            }
-            isLoadingSpecificGame.value = false
-        }
-    }
-
     fun addFavouriteGame(gameId: Int) {
         favouriteGameIds.add(gameId)
         updateFavouriteGames()
@@ -84,7 +72,7 @@ class GameViewModel : ViewModel() {
     fun removeFavouriteGame(gameId: Int) {
         var removeIdx = 0;
         favouriteGameIds.forEachIndexed { index, id ->
-            if(id == gameId){
+            if (id == gameId) {
                 removeIdx = index
             }
         }

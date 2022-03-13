@@ -1,14 +1,13 @@
 package com.example.schoolassignment.views
 
 import androidx.activity.ComponentActivity
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,34 +23,106 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.schoolassignment.R
-import com.example.schoolassignment.gameDTOs.GameDetailDTO
-import com.example.schoolassignment.viewModels.GameViewModel
+import com.example.schoolassignment.gameDTOs.MinimumSystemRequirements
+import com.example.schoolassignment.viewModels.GameDetailViewModel
+import com.example.schoolassignment.viewModels.GameOverviewViewModel
+import kotlinx.coroutines.launch
 
+@ExperimentalMaterialApi
 @Composable
 fun GameDetailView(mainNavController: NavHostController, gameId: String) {
 
-    val gameVM = viewModel<GameViewModel>(LocalContext.current as ComponentActivity)
-    gameVM.getSpecificGame(gameId.toInt())
+    val gameDetailVM = viewModel<GameDetailViewModel>()
+    val gameOverviewVM =  viewModel<GameOverviewViewModel>(LocalContext.current as ComponentActivity)
 
-    if (gameVM.isLoadingSpecificGame.value) {
+    gameDetailVM.getSpecificGame(gameId.toInt())
+
+    if (gameDetailVM.specificGame.value == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center)
         {
             CircularProgressIndicator()
         }
     } else {
-        Scaffold(
-            topBar = { GameDetailTopBar(mainNavController, gameVM) }
+
+        val scaffoldState = rememberBottomSheetScaffoldState(
+            bottomSheetState = rememberBottomSheetState(BottomSheetValue.Collapsed)
+        )
+
+
+        BottomSheetScaffold(
+            topBar = {
+                GameDetailTopBar(
+                    mainNavController,
+                    gameDetailVM,
+                    gameOverviewVM,
+                    scaffoldState
+                )
+            },
+            sheetContent = { AddNoteDialog(scaffoldState, gameDetailVM) },
+            scaffoldState = scaffoldState,
+            sheetPeekHeight = 0.dp,
+            sheetElevation = 10.dp,
+            sheetBackgroundColor = Color(0xFFF5EFEF),
         ) {
-            GameDetail(gameVM.specificGame, gameVM.showFavouritesPage)
+            GameDetail(gameDetailVM, gameOverviewVM)
+
+        }
+    }
+}
+
+@ExperimentalMaterialApi
+@Composable
+fun AddNoteDialog(scaffoldState: BottomSheetScaffoldState, gameDetailVM: GameDetailViewModel) {
+
+    var note by remember { mutableStateOf("") }
+    val coroutineScope = rememberCoroutineScope()
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(250.dp)
+            .padding(8.dp)
+    ) {
+        OutlinedTextField(
+            value = note,
+            onValueChange = { note = it },
+            label = { Text("Note") }
+        )
+        Spacer(modifier = Modifier.height(15.dp))
+        Row() {
+            TextButton(onClick = {
+                coroutineScope.launch {
+                    scaffoldState.bottomSheetState.collapse()
+                }
+            }) {
+                Text(text = "Cancel")
+            }
+            Spacer(modifier = Modifier.width(20.dp))
+            OutlinedButton(
+                onClick = {
+                    if(note.trim().isNotEmpty()){
+                        gameDetailVM.addNote(note)
+                    }
+                    note = ""
+                    coroutineScope.launch {
+                        scaffoldState.bottomSheetState.collapse()
+                    }
+                }, border = BorderStroke(1.dp, MaterialTheme.colors.primary)
+            ) {
+                Text(text = "Save")
+            }
         }
     }
 }
 
 @Composable
-fun GameDetail(gameDetail: GameDetailDTO, showFavouritesPage: Boolean) {
+fun GameDetail(gameDetailVM: GameDetailViewModel, gameOverviewVM: GameOverviewViewModel) {
+
     Column() {
         AsyncImage(
-            model = gameDetail.thumbnail,
+            model = gameDetailVM.specificGame.value!!.thumbnail,
             contentDescription = null,
             modifier = Modifier.fillMaxWidth()
         )
@@ -68,49 +139,102 @@ fun GameDetail(gameDetail: GameDetailDTO, showFavouritesPage: Boolean) {
                 .padding(3.dp)
 
         ) {
-            items(count = gameDetail.screenshots.size, itemContent = { index ->
-                GameScreenshot(screenshotURL = gameDetail.screenshots[index].image)
+            items(count = gameDetailVM.specificGame.value!!.screenshots.size, itemContent = { index ->
+                GameScreenshot(screenshotURL = gameDetailVM.specificGame.value!!.screenshots[index].image)
             })
         }
-        //EITHER NOTES OR
-        if (showFavouritesPage) Box() {
-            Text(text = "FAVOURITES LAYOUT")
+        if (gameOverviewVM.showFavouritesPage) {
+            PersonalNotes(gameDetailVM)
+        } else {
+            SystemRequirements(sysReq = gameDetailVM.specificGame.value!!.minimum_system_requirements)
         }
-        else {
-            Text(
-                text = "Minimum system requirements", fontSize = 20.sp, fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start = 8.dp)
+    }
+}
+
+@Composable
+fun PersonalNotes(gameDetailVM: GameDetailViewModel) {
+
+    gameDetailVM.getSpecificGameNotes()
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(top = 2.dp, start = 8.dp, end = 8.dp, bottom = 8.dp)
+            .border(
+                border = BorderStroke(width = 1.dp, Color.Black),
+                shape = RoundedCornerShape(5.dp)
             )
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 2.dp, start = 8.dp, end = 8.dp, bottom = 8.dp)
-                    .border(
-                        border = BorderStroke(width = 1.dp, Color.Black),
-                        shape = RoundedCornerShape(5.dp)
-                    )
-                    .padding(8.dp)
-            ) {
-                val sysReq = gameDetail.minimum_system_requirements
-                val sysReqsMap = hashMapOf(
-                    "Graphics:" to sysReq.graphics,
-                    "Memory:" to sysReq.memory,
-                    "Operating system:" to sysReq.os,
-                    "Processor:" to sysReq.processor,
-                    "Storage:" to sysReq.storage,
+            .padding(8.dp)
+    ) {
+        if (!gameDetailVM.isLoadingNotes.value) {
+            val notes = gameDetailVM.specificGameNotes.value
+            if (notes.isEmpty()) {
+                Text(
+                    text = "No personal notes!",
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
                 )
-                sysReqsMap.forEach { (key, value) ->
-                    Row() {
-                        Text(
-                            text = key,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontStyle = FontStyle.Italic
-                        )
-                        Spacer(modifier = Modifier.width(5.dp))
-                        Text(text = value ?: "No requirement mentioned")
-                    }
+            } else {
+                LazyColumn(
+                ) {
+                    items(count = notes.size, itemContent = { index ->
+                        Row(modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            IconButton(onClick = {
+                                gameDetailVM.removeNote(notes[index].id)
+                            }) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_baseline_delete_24),
+                                    contentDescription = null,
+                                    tint = Color(0xFFDD6363)
+                                )
+                            }
+                            Text(text = notes[index].text,
+                                fontSize = 22.sp,
+                                fontStyle = FontStyle.Italic)
+                        }
+
+                    })
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun SystemRequirements(sysReq: MinimumSystemRequirements) {
+    Text(
+        text = "Minimum system requirements", fontSize = 20.sp, fontWeight = FontWeight.Bold,
+        modifier = Modifier.padding(start = 8.dp)
+    )
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 2.dp, start = 8.dp, end = 8.dp, bottom = 8.dp)
+            .border(
+                border = BorderStroke(width = 1.dp, Color.Black),
+                shape = RoundedCornerShape(5.dp)
+            )
+            .padding(8.dp)
+    ) {
+        val sysReqsMap = hashMapOf(
+            "Graphics:" to sysReq.graphics,
+            "Memory:" to sysReq.memory,
+            "Operating system:" to sysReq.os,
+            "Processor:" to sysReq.processor,
+            "Storage:" to sysReq.storage,
+        )
+        sysReqsMap.forEach { (key, value) ->
+            Row() {
+                Text(
+                    text = key,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontStyle = FontStyle.Italic
+                )
+                Spacer(modifier = Modifier.width(5.dp))
+                Text(text = value ?: "No requirement mentioned")
             }
         }
     }
@@ -127,8 +251,14 @@ fun GameScreenshot(screenshotURL: String) {
     }
 }
 
+@ExperimentalMaterialApi
 @Composable
-fun GameDetailTopBar(mainNavController: NavHostController, gameVM: GameViewModel) {
+fun GameDetailTopBar(
+    mainNavController: NavHostController,
+    gameDetailVM: GameDetailViewModel,
+    gameOverviewVM: GameOverviewViewModel,
+    bottomSheetState: BottomSheetScaffoldState
+) {
     TopAppBar(
         backgroundColor = Color(0xFF363333),
         modifier = Modifier.fillMaxWidth()
@@ -146,7 +276,6 @@ fun GameDetailTopBar(mainNavController: NavHostController, gameVM: GameViewModel
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.clickable {
                         mainNavController.popBackStack()
-                        gameVM.isLoadingSpecificGame.value = true
                     }) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_baseline_arrow_back_24),
@@ -163,14 +292,15 @@ fun GameDetailTopBar(mainNavController: NavHostController, gameVM: GameViewModel
                 }
             }
             Text(
-                text = gameVM.specificGame.title,
+                text = gameDetailVM.specificGame.value!!.title,
                 fontSize = 21.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
                 color = Color(0xFFF3E8E8),
                 modifier = Modifier.weight(1f),
             )
-            if (gameVM.showFavouritesPage) {
+            if (gameOverviewVM.showFavouritesPage) {
+                val coroutineScope = rememberCoroutineScope()
                 Box(
                     modifier = Modifier
                         .weight(0.7f)
@@ -180,8 +310,11 @@ fun GameDetailTopBar(mainNavController: NavHostController, gameVM: GameViewModel
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.clickable {
-                            mainNavController.popBackStack()
-                            gameVM.isLoadingSpecificGame.value = true
+                            coroutineScope.launch {
+                                if (bottomSheetState.bottomSheetState.isCollapsed) {
+                                    bottomSheetState.bottomSheetState.expand()
+                                }
+                            }
                         }) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_baseline_add_24),
