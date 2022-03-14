@@ -1,6 +1,5 @@
 package com.example.schoolassignment.viewModels
 
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -14,8 +13,6 @@ import retrofit2.Retrofit
 import retrofit2.awaitResponse
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.create
-
-
 
 class GameOverviewViewModel : ViewModel() {
 
@@ -58,7 +55,10 @@ class GameOverviewViewModel : ViewModel() {
             .get()
             .addOnSuccessListener {
                 if (it.data != null) {
+                    @Suppress("UNCHECKED_CAST")
                     favouriteGameIds = it.get("gameIds") as MutableList<Int>
+                } else {
+                    favouriteGameIds = mutableListOf()
                 }
                 isLoadingGameIds.value = false
             }
@@ -70,7 +70,8 @@ class GameOverviewViewModel : ViewModel() {
     }
 
     fun removeFavouriteGame(gameId: Int) {
-        var removeIdx = 0;
+
+        var removeIdx = 0
         favouriteGameIds.forEachIndexed { index, id ->
             if (id == gameId) {
                 removeIdx = index

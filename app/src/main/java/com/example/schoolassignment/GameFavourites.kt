@@ -16,13 +16,11 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.schoolassignment.viewModels.GameOverviewViewModel
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
 
 @Composable
 fun GameFavourites(mainNavController: NavHostController) {
     val gameVM = viewModel<GameOverviewViewModel>(LocalContext.current as ComponentActivity)
-    gameVM.showFavouritesPage = true;
+    gameVM.showFavouritesPage = true
 
 
     val favouritesGames = gameVM.games.filter { game ->

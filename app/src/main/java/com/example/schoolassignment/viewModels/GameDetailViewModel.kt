@@ -44,7 +44,6 @@ class GameDetailViewModel : ViewModel() {
         }
     }
 
-
     fun getSpecificGameNotes() {
         Firebase.firestore
             .collection("favouriteGames/${Firebase.auth.currentUser!!.uid}/notes")

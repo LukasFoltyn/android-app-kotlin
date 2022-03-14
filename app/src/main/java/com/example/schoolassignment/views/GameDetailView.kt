@@ -91,7 +91,7 @@ fun AddNoteDialog(scaffoldState: BottomSheetScaffoldState, gameDetailVM: GameDet
             label = { Text("Note") }
         )
         Spacer(modifier = Modifier.height(15.dp))
-        Row() {
+        Row {
             TextButton(onClick = {
                 coroutineScope.launch {
                     scaffoldState.bottomSheetState.collapse()
@@ -120,7 +120,7 @@ fun AddNoteDialog(scaffoldState: BottomSheetScaffoldState, gameDetailVM: GameDet
 @Composable
 fun GameDetail(gameDetailVM: GameDetailViewModel, gameOverviewVM: GameOverviewViewModel) {
 
-    Column() {
+    Column {
         AsyncImage(
             model = gameDetailVM.specificGame.value!!.thumbnail,
             contentDescription = null,
@@ -175,8 +175,7 @@ fun PersonalNotes(gameDetailVM: GameDetailViewModel) {
                     modifier = Modifier.fillMaxWidth()
                 )
             } else {
-                LazyColumn(
-                ) {
+                LazyColumn {
                     items(count = notes.size, itemContent = { index ->
                         Row(modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
@@ -226,7 +225,7 @@ fun SystemRequirements(sysReq: MinimumSystemRequirements) {
             "Storage:" to sysReq.storage,
         )
         sysReqsMap.forEach { (key, value) ->
-            Row() {
+            Row {
                 Text(
                     text = key,
                     fontSize = 18.sp,

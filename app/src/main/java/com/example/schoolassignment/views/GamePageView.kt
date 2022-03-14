@@ -22,6 +22,7 @@ import com.example.schoolassignment.GameFavourites
 import com.example.schoolassignment.GameOverview
 import com.example.schoolassignment.LOGIN_PAGE_ROUTE
 import com.example.schoolassignment.R
+import com.example.schoolassignment.viewModels.GameOverviewViewModel
 import com.example.schoolassignment.viewModels.LoginViewModel
 
 sealed class BottomNavItem(val title: String, val icon: Int, val screen_route: String) {
@@ -96,6 +97,7 @@ fun BottomAppBar(gameNavController: NavHostController) {
 fun GamesTopAppBar(mainNavController: NavHostController) {
 
     val loginVM = viewModel<LoginViewModel>(LocalContext.current as ComponentActivity)
+    val gameOverviewVM = viewModel<GameOverviewViewModel>(LocalContext.current as ComponentActivity)
     val userEmail = loginVM.getUserEmail()
 
     TopAppBar(
@@ -115,6 +117,8 @@ fun GamesTopAppBar(mainNavController: NavHostController) {
             TextButton(onClick = {
                 loginVM.signOut()
                 mainNavController.navigate(LOGIN_PAGE_ROUTE)
+                gameOverviewVM.isLoadingGames.value = true
+                gameOverviewVM.isLoadingGameIds.value = true
             }) {
                 Text(
                     text = "SIGN OUT",

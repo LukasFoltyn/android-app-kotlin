@@ -29,13 +29,11 @@ import com.google.firebase.ktx.Firebase
 
 @Composable
 fun GameOverview(mainNavController: NavHostController) {
-
     val userId = Firebase.auth.currentUser!!.uid
     val gameVM = viewModel<GameOverviewViewModel>(LocalContext.current as ComponentActivity)
     gameVM.showFavouritesPage = false
     gameVM.getAllGames()
     gameVM.getUsersFavouriteGames(userId)
-
 
     if (gameVM.isLoadingGames.value || gameVM.isLoadingGameIds.value) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -111,7 +109,7 @@ fun GameCardBase(
     mainNavController: NavHostController,
     gameId: Int,
     imgURL: String,
-    content: @Composable() () -> Unit
+    content: @Composable () -> Unit
 ) {
     Card(
         modifier = Modifier
